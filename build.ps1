@@ -1,5 +1,5 @@
-$PROJECT_NAME = "ASFAddFreeGames"
-$PLUGIN_NAME = "ASFAddFreeGames.dll"
+$PROJECT_NAME = "ASFDailyExecute"
+$PLUGIN_NAME = "ASFDailyExecute.dll"
 
 dotnet publish $PROJECT_NAME -o ./publish/ -c Release
 
