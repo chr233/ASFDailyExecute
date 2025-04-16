@@ -6,9 +6,9 @@ on:
       - "*"
 
 env:
-  PROJECT_NAME: "ASFAddFreeGames"
-  REPO_NAME: "ASFAddFreeGames"
-  PLUGIN_NAME: "ASFAddFreeGames.dll"
+  PROJECT_NAME: "ASFDailyExecute"
+  REPO_NAME: "ASFDailyExecute"
+  PLUGIN_NAME: "ASFDailyExecute.dll"
   DOTNET_SDK_VERSION: 9.0
 
 jobs:
