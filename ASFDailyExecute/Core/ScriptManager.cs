@@ -3,8 +3,10 @@ internal sealed class ScriptManager
 {
     private Timer? timer;
 
+    private TimeOnly ExecuteTime = new TimeOnly(0, 0, 0);
     private DateOnly LastRun = DateOnly.MinValue;
-    private SemaphoreSlim semaphoreSlim;
+
+    private SemaphoreSlim SemaphoreSlim = new SemaphoreSlim(1);
 
     public void Init()
     {
@@ -12,7 +14,12 @@ internal sealed class ScriptManager
 
         if (RegexUtils.MatchExecuteTime().IsMatch(time) && TimeOnly.TryParse(time, out var actTime))
         {
-            timer = new Timer(TimerCallback, null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(10));
+            ExecuteTime = actTime;
+#if DEBUG
+            timer = new Timer(TimerCallback, null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(5));
+#else
+            timer = new Timer(TimerCallback, null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
+#endif
         }
         else
         {
@@ -26,19 +33,46 @@ internal sealed class ScriptManager
     /// 加载脚本内容
     /// </summary>
     /// <returns></returns>
-    public async Task<string[]> LoadScript()
+    public static async Task<string[]> LoadScript()
     {
         var filePath = Path.Combine(MyDirectory, ScriptName);
         await CreateDefaultScript(filePath).ConfigureAwait(false);
 
         using var reader = new StreamReader(filePath, encoding: System.Text.Encoding.UTF8);
-        var content = await reader.ReadToEndAsync().ConfigureAwait(false);
 
+        List<string> scripts = [];
+
+        while (!reader.EndOfStream)
+        {
+            var line = await reader.ReadLineAsync().ConfigureAwait(false);
+
+            line = line?.Trim();
+
+            if (string.IsNullOrEmpty(line))
+            {
+                continue;
+            }
+
+            var index = line.IndexOf('#');
+
+            if (index == 0)
+            {
+                continue;
+            }
+
+            if (index != -1)
+            {
+                line = line[..index].Trim();
+            }
+
+            if (!string.IsNullOrEmpty(line))
+            {
+                scripts.Add(line);
+            }
+        }
         reader.Close();
 
-        var lines = content.Split(Environment.NewLine);
-
-        return lines;
+        return [.. scripts];
     }
 
     private static async Task CreateDefaultScript(string filePath)
@@ -67,9 +101,29 @@ internal sealed class ScriptManager
     public async void TimerCallback(object? _)
     {
         ASFLogger.LogGenericWarning(DateTime.Now.ToString());
+
+        if (DateOnly.FromDateTime(DateTime.Now) == LastRun)
+        {
+            return;
+        }
+
+        await BotTask().ConfigureAwait(false);
     }
 
-    private async Task BotTask(SemaphoreSlim semaphore)
+    private async Task BotTask()
     {
+        await SemaphoreSlim.WaitAsync().ConfigureAwait(false);
+
+        try
+        {
+
+
+
+
+        }
+        finally
+        {
+            SemaphoreSlim.Release();
+        }
     }
 }

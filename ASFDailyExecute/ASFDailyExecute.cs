@@ -109,7 +109,7 @@ internal sealed class ASFDailyExecute : IASF, IBotCommand2
         var handler = typeof(ASFDailyExecute).GetMethod(nameof(ResponseCommand), flag);
 
         const string pluginId = nameof(ASFDailyExecute);
-        const string cmdPrefix = "AAFG";
+        const string cmdPrefix = "ADE";
         const string repoName = "ASFDailyExecute";
 
         ASFEBridge = AdapterBridge.InitAdapter(Name, pluginId, cmdPrefix, repoName, handler);
@@ -154,7 +154,7 @@ internal sealed class ASFDailyExecute : IASF, IBotCommand2
         {
             var cmd = args[0].ToUpperInvariant();
 
-            if (cmd.StartsWith("AAFG."))
+            if (cmd.StartsWith("ADE."))
             {
                 cmd = cmd[4..];
             }
@@ -202,7 +202,7 @@ internal sealed class ASFDailyExecute : IASF, IBotCommand2
             {
                 //插件信息
                 "ASFDailyExecute" or
-                "AAFG" when access >= EAccess.FamilySharing =>
+                "ADE" when access >= EAccess.FamilySharing =>
                     Task.FromResult(PluginInfo),
 
                 "TEST" when access >= EAccess.Operator =>

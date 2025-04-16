@@ -18,22 +18,6 @@ internal static class Utils
     internal const StringSplitOptions SplitOptions =
         StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries;
 
-    /// <summary>
-    ///     逗号分隔符
-    /// </summary>
-    internal static readonly char[] SeparatorDot = [','];
-
-    /// <summary>
-    ///     加号分隔符
-    /// </summary>
-    internal static readonly char[] SeparatorPlus = ['+'];
-
-    /// <summary>
-    ///     逗号空格分隔符
-    /// </summary>
-    internal static readonly char[] SeparatorDotSpace = [',', ' '];
-
-    internal static readonly char[] NewLineSeperator = ['\r', '\n'];
     internal static ScriptManager ScriptMgr { get; } = new();
 
     /// <summary>
