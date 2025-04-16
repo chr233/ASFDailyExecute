@@ -91,7 +91,7 @@ internal sealed class ASFDailyExecute : IASF, IBotCommand2
             );
         }
 
-        ScriptMgr.Init();
+        ScriptManager.Init();
 
         return Task.CompletedTask;
     }
@@ -167,11 +167,6 @@ internal sealed class ASFDailyExecute : IASF, IBotCommand2
 
             return null;
         }
-        catch (AccessTokenNullException ex)
-        {
-            return FormatStaticResponse("Bot {0} 's AccessToken is null, please try again later", ex.Message);
-        }
-
         catch (Exception ex)
         {
             _ = Task.Run(async () => {
@@ -202,18 +197,24 @@ internal sealed class ASFDailyExecute : IASF, IBotCommand2
             {
                 //插件信息
                 "ASFDailyExecute" or
-                "ADE" when access >= EAccess.FamilySharing =>
-                    Task.FromResult(PluginInfo),
+                "ADE" when access >= EAccess.FamilySharing => Task.FromResult(PluginInfo),
 
-                "TEST" when access >= EAccess.Operator =>
-                    Command.ResponseGetScript(bot),
+                "GETSCRIPT" or
+                "GS" when access >= EAccess.Operator => Command.ResponseGetScript(),
+
+                "RESETSCRIPT" or
+                "RS" when access >= EAccess.Operator => Command.ResponseResetScript(),
 
                 _ => null
             },
             _ => cmd switch //带参数
             {
-                "TEST" when access >= EAccess.Operator =>
-                    Command.ResponseGetScript(Utilities.GetArgsAsText(args, 1, ",")),
+                "GETSCRIPT" or
+                "GS" when access >= EAccess.Operator => Command.ResponseGetScript(),
+
+                "RESETSCRIPT" or
+                "RS" when access >= EAccess.Operator => Command.ResponseResetScript(),
+
                 _ => null
             }
         };

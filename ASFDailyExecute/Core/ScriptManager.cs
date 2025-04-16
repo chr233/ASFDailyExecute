@@ -1,14 +1,17 @@
+using ArchiSteamFarm.Steam;
+
 namespace ASFDailyExecute.Core;
-internal sealed class ScriptManager
+internal static class ScriptManager
 {
-    private Timer? timer;
+    private static Timer? timer;
 
-    private TimeOnly ExecuteTime = new TimeOnly(0, 0, 0);
-    private DateOnly LastRun = DateOnly.MinValue;
+    private static TimeOnly ExecuteTime = new TimeOnly(0, 0, 0);
+    private static DateOnly LastRunDate = DateOnly.MinValue;
 
-    private SemaphoreSlim SemaphoreSlim = new SemaphoreSlim(1);
-
-    public void Init()
+    /// <summary>
+    /// 初始化
+    /// </summary>
+    public static void Init()
     {
         var time = Config.ExecuteTime;
 
@@ -18,7 +21,7 @@ internal sealed class ScriptManager
 #if DEBUG
             timer = new Timer(TimerCallback, null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(5));
 #else
-            timer = new Timer(TimerCallback, null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
+            timer = new Timer(TimerCallback, null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60));
 #endif
         }
         else
@@ -30,13 +33,22 @@ internal sealed class ScriptManager
     private const string ScriptName = "ASFDailyExecute.txt";
 
     /// <summary>
+    /// 获取脚本路径
+    /// </summary>
+    /// <returns></returns>
+    public static string GetScriptPath()
+    {
+        return Path.Combine(MyDirectory, ScriptName);
+    }
+
+    /// <summary>
     /// 加载脚本内容
     /// </summary>
     /// <returns></returns>
-    public static async Task<string[]> LoadScript()
+    public static async Task<string[]> LoadScriptContent()
     {
-        var filePath = Path.Combine(MyDirectory, ScriptName);
-        await CreateDefaultScript(filePath).ConfigureAwait(false);
+        var filePath = GetScriptPath();
+        await CreateDefaultScript().ConfigureAwait(false);
 
         using var reader = new StreamReader(filePath, encoding: System.Text.Encoding.UTF8);
 
@@ -75,14 +87,47 @@ internal sealed class ScriptManager
         return [.. scripts];
     }
 
-    private static async Task CreateDefaultScript(string filePath)
+    private const string BackupScriptName = "ASFDailyExecute.backup.txt";
+
+    /// <summary>
+    /// 获取脚本路径
+    /// </summary>
+    /// <returns></returns>
+    private static string GetBackupScriptPath()
     {
+        return Path.Combine(MyDirectory, BackupScriptName);
+    }
+
+    /// <summary>
+    /// 创建默认脚本
+    /// </summary>
+    /// <returns></returns>
+    private static Task CreateDefaultScript()
+    {
+        var filePath = GetScriptPath();
         if (File.Exists(filePath))
         {
-            return;
+            return Task.CompletedTask;
         }
 
-        ASFLogger.LogGenericWarning("脚本不存在, 创建默认脚本模板");
+        return ResetDefaultScript();
+    }
+
+    /// <summary>
+    /// 重置脚本
+    /// </summary>
+    /// <returns></returns>
+    public static async Task ResetDefaultScript()
+    {
+        var filePath = GetScriptPath();
+        if (File.Exists(filePath))
+        {
+            var backupPath = GetBackupScriptPath();
+            File.Move(filePath, backupPath, true);
+            ASFLogger.LogGenericWarning($"备份旧脚本到 {backupPath}");
+        }
+
+        ASFLogger.LogGenericWarning("创建默认脚本模板");
 
         using var writer = new StreamWriter(filePath, false, encoding: System.Text.Encoding.UTF8);
         writer.WriteLine("#");
@@ -92,34 +137,93 @@ internal sealed class ScriptManager
         writer.WriteLine("# 2. $ 会被替换为机器人名");
         writer.WriteLine("# 3. 脚本一行一句");
         writer.WriteLine();
+        writer.WriteLine("LEVEL $");
+        writer.WriteLine("BALANCE $");
         writer.WriteLine("STATUS $");
 
         await writer.FlushAsync().ConfigureAwait(false);
         writer.Close();
     }
 
-    public async void TimerCallback(object? _)
+    public static async void TimerCallback(object? _)
     {
-        ASFLogger.LogGenericWarning(DateTime.Now.ToString());
-
-        if (DateOnly.FromDateTime(DateTime.Now) == LastRun)
+        if (DateOnly.FromDateTime(DateTime.Now) == LastRunDate)
         {
             return;
         }
 
-        await BotTask().ConfigureAwait(false);
+        if (TimeOnly.FromDateTime(DateTime.Now) < ExecuteTime)
+        {
+            return;
+        }
+
+        LastRunDate = DateOnly.FromDateTime(DateTime.Now);
+
+        await ExecuteBotScript().ConfigureAwait(false);
     }
 
-    private async Task BotTask()
+    private static SemaphoreSlim SemaphoreSlim = new SemaphoreSlim(1);
+
+    /// <summary>
+    /// 执行脚本
+    /// </summary>
+    /// <returns></returns>
+    private static async Task ExecuteBotScript()
     {
         await SemaphoreSlim.WaitAsync().ConfigureAwait(false);
 
+        ASFLogger.LogGenericWarning(DateTime.Now.ToString());
+
+        if (Bot.BotsReadOnly == null)
+        {
+            return;
+        }
+
         try
         {
+            var lines = await LoadScriptContent().ConfigureAwait(false);
 
+            foreach (var (_, bot) in Bot.BotsReadOnly)
+            {
+                var botConnected = bot.IsConnectedAndLoggedOn;
 
+                if (!botConnected)
+                {
+                    for (int i = 0; i < 5; i++)
+                    {
+                        ASFLogger.LogGenericInfo($"{bot.BotName} 离线, 正在启动");
 
+                        bot.Actions.Start();
 
+                        await Task.Delay(3000).ConfigureAwait(false);
+
+                        if (bot.IsConnectedAndLoggedOn)
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                if (!bot.IsConnectedAndLoggedOn)
+                {
+                    ASFLogger.LogGenericInfo($"{bot.BotName} 上线失败, 跳过执行");
+                    continue;
+                }
+
+                foreach (var line in lines)
+                {
+                    var command = line.Replace("$", bot.BotName);
+                    var result = await bot.Commands.Response(EAccess.Master, command, 0).ConfigureAwait(false);
+
+                    ASFLogger.LogGenericInfo($"{bot.BotName} 执行命令 {command}");
+                    ASFLogger.LogGenericInfo($"{bot.BotName} 执行结果 {result}");
+                }
+
+                if (!botConnected && Config.OfflineAfterExecute)
+                {
+                    await bot.Actions.Stop().ConfigureAwait(false);
+                }
+            }
         }
         finally
         {

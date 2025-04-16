@@ -2,14 +2,10 @@ using ArchiSteamFarm.Core;
 using ArchiSteamFarm.NLog;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Integration;
-using ArchiSteamFarm.Web;
-using ArchiSteamFarm.Web.Responses;
-using ASFDailyExecute.Core;
 using ASFDailyExecute.Data;
 using System.Collections.Concurrent;
 using System.Reflection;
 using System.Text;
-using static ArchiSteamFarm.Steam.Integration.ArchiWebHandler;
 
 namespace ASFDailyExecute;
 
@@ -17,8 +13,6 @@ internal static class Utils
 {
     internal const StringSplitOptions SplitOptions =
         StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries;
-
-    internal static ScriptManager ScriptMgr { get; } = new();
 
     /// <summary>
     ///     插件配置
@@ -110,110 +104,4 @@ internal static class Utils
 
     internal static StringBuilder AppendLineFormat(this StringBuilder sb, string format, params object?[] args) =>
         sb.AppendLine(string.Format(format, args));
-
-    /// <summary>
-    ///     获取个人资料链接
-    /// </summary>
-    /// <param name="bot"></param>
-    /// <returns></returns>
-    internal static async Task<string?> GetProfileLink(this Bot bot) =>
-        await bot.ArchiWebHandler.GetAbsoluteProfileURL().ConfigureAwait(false);
-
-    /// <summary>
-    ///     转换SteamId
-    /// </summary>
-    /// <param name="steamId"></param>
-    /// <returns></returns>
-    internal static ulong SteamId2Steam32(ulong steamId) =>
-        IsSteam32ID(steamId) ? steamId : steamId - 0x110000100000000;
-
-    /// <summary>
-    ///     转换SteamId
-    /// </summary>
-    /// <param name="steamId"></param>
-    /// <returns></returns>
-    internal static ulong Steam322SteamId(ulong steamId) =>
-        IsSteam32ID(steamId) ? steamId + 0x110000100000000 : steamId;
-
-    internal static bool IsSteam32ID(ulong id) => id <= 0xFFFFFFFF;
-
-    /// <summary>
-    ///     布尔转换为char
-    /// </summary>
-    /// <param name="b"></param>
-    /// <returns></returns>
-    internal static char Bool2Str(bool b) => b ? '√' : '×';
-
-    internal static char ToStr(this bool b) => Bool2Str(b);
-
-    /// <summary>
-    ///     跳过参数获取Bot名称
-    /// </summary>
-    /// <param name="args"></param>
-    /// <param name="skipStart"></param>
-    /// <param name="skipEnd"></param>
-    /// <returns></returns>
-    internal static string SkipBotNames(string[] args, int skipStart, int skipEnd) =>
-        string.Join(',', args[skipStart..(args.Length - skipEnd)]);
-
-    internal static Task<ObjectResponse<T>?> UrlPostToJsonObject<T>(this ArchiWebHandler handler,
-        Uri request,
-        IDictionary<string, string>? data = null,
-        Uri? referer = null,
-        WebBrowser.ERequestOptions requestOptions = WebBrowser.ERequestOptions.None,
-        bool checkSessionPreemptively = true,
-        byte maxTries = WebBrowser.MaxTries,
-        int rateLimitingDelay = 0,
-        bool allowSessionRefresh = true,
-        CancellationToken cancellationToken = default) =>
-        handler.UrlPostToJsonObjectWithSession<T>(request, null, data, referer, requestOptions, ESession.None,
-            checkSessionPreemptively, maxTries, rateLimitingDelay, allowSessionRefresh, cancellationToken);
-
-    internal static Task<HtmlDocumentResponse?> UrlPostToHtmlDocument(this ArchiWebHandler handler,
-        Uri request,
-        IDictionary<string, string>? data = null,
-        Uri? referer = null,
-        WebBrowser.ERequestOptions requestOptions = WebBrowser.ERequestOptions.None,
-        bool checkSessionPreemptively = true,
-        byte maxTries = WebBrowser.MaxTries,
-        int rateLimitingDelay = 0,
-        bool allowSessionRefresh = true,
-        CancellationToken cancellationToken = default) =>
-        handler.UrlPostToHtmlDocumentWithSession(request, null, data, referer, requestOptions, ESession.None,
-            checkSessionPreemptively, maxTries, rateLimitingDelay, allowSessionRefresh, cancellationToken);
-
-    internal static Task<bool> UrlPost(this ArchiWebHandler handler,
-        Uri request,
-        IDictionary<string, string>? data = null,
-        Uri? referer = null,
-        WebBrowser.ERequestOptions requestOptions = WebBrowser.ERequestOptions.None,
-        bool checkSessionPreemptively = true,
-        byte maxTries = WebBrowser.MaxTries,
-        int rateLimitingDelay = 0,
-        bool allowSessionRefresh = true,
-        CancellationToken cancellationToken = default) =>
-        handler.UrlPostWithSession(request, null, data, referer, requestOptions, ESession.None,
-            checkSessionPreemptively, maxTries, rateLimitingDelay, allowSessionRefresh, cancellationToken);
-
-    internal static async Task SaveToFile(string fileName, string fileContent)
-    {
-        var filePath = Path.Combine(MyDirectory, $"{fileName}.txt");
-
-        try
-        {
-            if (File.Exists(filePath))
-            {
-                File.Delete(filePath);
-            }
-
-            using var file = File.CreateText(filePath);
-            await file.WriteAsync(fileContent).ConfigureAwait(false);
-            await file.FlushAsync().ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            ASFLogger.LogGenericError(string.Format("写入文件至 {0} 失败", filePath));
-            ASFLogger.LogGenericException(ex);
-        }
-    }
 }
