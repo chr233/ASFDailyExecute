@@ -162,7 +162,7 @@ internal static class ScriptManager
         await ExecuteBotScript().ConfigureAwait(false);
     }
 
-    private static SemaphoreSlim SemaphoreSlim = new SemaphoreSlim(1);
+    private static readonly SemaphoreSlim SemaphoreSlim = new(1);
 
     /// <summary>
     /// 执行脚本
@@ -219,7 +219,7 @@ internal static class ScriptManager
                     ASFLogger.LogGenericInfo($"{bot.BotName} 执行结果 {result}");
                 }
 
-                if (!botConnected && Config.OfflineAfterExecute)
+                if (!botConnected && Config.OfflineAfterExecute && bot.CardsFarmer.CurrentGamesFarmingReadOnly.Count == 0)
                 {
                     await bot.Actions.Stop().ConfigureAwait(false);
                 }
