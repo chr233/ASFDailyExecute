@@ -1,4 +1,5 @@
 using ArchiSteamFarm.Steam;
+using ASFDailyExecute.Data;
 
 namespace ASFDailyExecute.Core;
 internal static class ScriptManager
@@ -189,7 +190,7 @@ internal static class ScriptManager
 
                 if (!botConnected)
                 {
-                    for (int i = 0; i < 5; i++)
+                    for (int i = 0; i < 10; i++)
                     {
                         ASFLogger.LogGenericInfo($"{bot.BotName} 离线, 正在启动");
 
@@ -209,6 +210,17 @@ internal static class ScriptManager
                     ASFLogger.LogGenericInfo($"{bot.BotName} 上线失败, 跳过执行");
                     continue;
                 }
+
+                var market = await WebRequest.GetMarketAvailable(bot).ConfigureAwait(false);
+                var gameCount = await WebRequest.GetBotGameCount(bot).ConfigureAwait(false);
+                var country = WebRequest.GetBotCountry(bot);
+                var balance = ((decimal)bot.WalletBalance) / 100;
+                var level = await WebRequest.GetBotLevel(bot).ConfigureAwait(false);
+
+                var summary = new BotSummary(market, bot.SteamID, country, balance, gameCount, level);
+                AcManager.UpdateBotSummary(bot, summary);
+
+                await AcManager.SaveToFile().ConfigureAwait(false);
 
                 foreach (var line in lines)
                 {

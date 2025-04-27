@@ -2,6 +2,7 @@ using ArchiSteamFarm.Core;
 using ArchiSteamFarm.NLog;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Integration;
+using ASFDailyExecute.Core;
 using ASFDailyExecute.Data;
 using System.Collections.Concurrent;
 using System.Reflection;
@@ -20,6 +21,8 @@ internal static class Utils
     internal static PluginConfig Config { get; set; } = null!;
 
     internal static ConcurrentDictionary<Bot, string?> CustomUserCountry { get; } = [];
+
+    internal static AccountManager AcManager { get; } = new AccountManager();
 
     /// <summary>
     ///     获取版本号

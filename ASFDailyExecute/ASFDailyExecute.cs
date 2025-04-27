@@ -22,7 +22,7 @@ internal sealed class ASFDailyExecute : IASF, IBotCommand2
     /// <summary>
     ///     获取插件信息
     /// </summary>
-    private string? PluginInfo => $"{Name} {Version}";
+    private string PluginInfo => $"{Name} {Version}";
 
     public string Name => "ASF Daily Execute";
 
@@ -187,7 +187,7 @@ internal sealed class ASFDailyExecute : IASF, IBotCommand2
     /// <param name="args"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
-    private Task<string?>? ResponseCommand(Bot bot, EAccess access, string cmd, string[] args)
+    private Task<string>? ResponseCommand(Bot bot, EAccess access, string cmd, string[] args)
     {
         var argLength = args.Length;
 
@@ -204,6 +204,8 @@ internal sealed class ASFDailyExecute : IASF, IBotCommand2
 
                 "RESETSCRIPT" or
                 "RS" when access >= EAccess.Operator => Command.ResponseResetScript(),
+
+                "TEST" when access >= EAccess.Master => Command.ResponseTest(bot),
 
                 _ => null
             },
