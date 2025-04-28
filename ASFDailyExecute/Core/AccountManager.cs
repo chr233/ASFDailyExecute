@@ -37,11 +37,11 @@ internal class AccountManager
             using var sw = new StreamWriter(fs);
             var sb = new StringBuilder();
 
-            sb.AppendLine("机器人,SteamId,市场,国家,钱包余额,游戏数量,等级");
+            sb.AppendLine("机器人,SteamId,市场,国家,钱包余额,游戏数量,等级,更新时间");
 
             foreach (var (b, s) in BotSummaryDict)
             {
-                sb.AppendLine(string.Format("\"{0}\",\"{1}\",\"{2}\",\"{3}\",{4},{5},{6}", b.BotName, s.SteamId, s.MarketAvailable ? '√' : '×', s.Country, s.WalletBalance, s.GameCount, s.Level));
+                sb.AppendLine(string.Format("\"{0}\",\"{1}\",\"{2}\",\"{3}\",{4},{5},{6},\"{7}\"", b.BotName, s.SteamId, s.MarketAvailable ? '√' : '×', s.Country, s.WalletBalance, s.GameCount, s.Level, s.CreateAt));
             }
 
             await sw.WriteAsync(sb).ConfigureAwait(false);
