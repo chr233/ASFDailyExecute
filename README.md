@@ -1,43 +1,54 @@
-# ASFAddFreeGames
+# ASFDailyExecute
 
-| Command                        | Shortcut | Right           | Description                                           |
-| ------------------------------ | -------- | --------------- | ----------------------------------------------------- |
-| `ASFADDFREEGAMES`              | `AAFG`   | `FamilySharing` | Test plugin                                           |
-| -                              | -        | -               | -                                                     |
-| `RELOADFREEGAMES`              | `RFG`    | `Operator`      | Reload free game list from `plugins/FreeGameData.txt` |
-| `FREEGAMESTATUS [Bots]`        | `FGS`    | `Operator`      | Get bot status about adding games                     |
-| `ADDFREEGAME [Bots] Amount`    | `AFG`    | `Operator`      | Add specify amount of games to bot's library          |
-| `PLAYRANDOMGAME [Bots] Amount` | `PRG`    | `Operator`      | Play random games in bot's library                    |
-| `STOPPLAYGAME [Bots]`          | `SPG`    | `Operator`      | Stop playing random games                             |
-| `SETPLAYTIME [Bots] Amount`    | `SPT`    | `Operator`      | Set playtime range for `PLAYRANDOMGAME`               |
-| `WHATGAME [Bots]`              | `WG`     | `Operator`      | Get the name of the game, bot is current playing      |
+## 配置文件
 
-```Plain
-ADDFREEGAME Example:
-
-AFG ASF 50 : add 50 games to bot's library
-AFG ASF 30-80 : add random (from 30 to 80) games to bot's library
+```json
+{
+  "IPCPassword": "",
+  "CurrentCulture": "zh-CN",
+  "InventoryLimiterDelay": 5,
+  "MaxTradeHoldDuration": 1,
+  "SteamMessagePrefix": null,
+  "UpdatePeriod": 0,
+  "Headless": true,
+  "ASFEnhance": {
+    "EULA": true,
+    "Statistic": true,
+    "ExecuteTime": "00:00",
+    "OfflineAfterExecute": false
+  }
+}
 ```
 
----
+| 配置项目              | 类型   | 默认值  | 说明                                                                              |
+| --------------------- | ------ | ------- | --------------------------------------------------------------------------------- |
+| `EULA`                | `bool` | `false` | 是否同意使用协议                                                                  |
+| `Statistic`           | `bool` | `true`  | 发送统计信息                                                                      |
+| `ExecuteTime`         | `str`  | `00:00` | 脚本每日执行时间                                                                  |
+| `OfflineAfterExecute` | `bool` | `true`  | 脚本执行结束以后是否离线机器人 (执行脚本前就在线的, 或者正在挂卡的机器人不受影响) |
 
-```Plain
-PLAYRANDOMGAME Example:
+## 命令
 
-PRG ASF 5 : play random 5 games from bot's library
-PRG ASF 10-30 : play random (from 10 to 30) games from bot's library
+| Command           | Shortcut | Right           | Description  |
+| ----------------- | -------- | --------------- | ------------ |
+| `ASFDailyExecute` | `ADE`    | `FamilySharing` | 测试插件     |
+| -                 | -        | -               | -            |
+| `GETSCRIPT`       | `GS`     | `Operator`      | 查看脚本内容 |
+| `RESETSCRIPT`     | `RS`     | `Operator`      | 重置脚本内容 |
 
-*bot can play up to 32 games at the same time*
-```
+脚本位于 `pugins/ASFDailyExecute.txt`
 
----
+示例脚本
 
-```Plain
-SETPLAYTIME Example:
+```plain
+#
+# 脚本说明 by chr_
+#
+# 1. # 后面的内容会被忽略
+# 2. $ 会被替换为机器人名
+# 3. 脚本一行一句
 
-SPT ASF 0 : set playtime to unlimited
-SPT ASF 5 : set playtime to 5 minutes
-SPT ASF 10-300 : set playtime to from 10 to 300 minutes (every game will use a random time)
-
-*playtime setting will be stored*
+LEVEL $
+BALANCE $
+STATUS $
 ```

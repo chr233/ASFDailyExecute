@@ -91,7 +91,10 @@ internal sealed class ASFDailyExecute : IASF, IBotCommand2
             );
         }
 
-        ScriptManager.Init();
+        if (Config.EULA)
+        {
+            ScriptManager.Init();
+        }
 
         return Task.CompletedTask;
     }
@@ -196,7 +199,7 @@ internal sealed class ASFDailyExecute : IASF, IBotCommand2
             1 => cmd switch //不带参数
             {
                 //插件信息
-                "ASFDailyExecute" or
+                "ASFDAILYEXECUTE" or
                 "ADE" when access >= EAccess.FamilySharing => Task.FromResult(PluginInfo),
 
                 "GETSCRIPT" or
@@ -204,8 +207,6 @@ internal sealed class ASFDailyExecute : IASF, IBotCommand2
 
                 "RESETSCRIPT" or
                 "RS" when access >= EAccess.Operator => Command.ResponseResetScript(),
-
-                "TEST" when access >= EAccess.Master => Command.ResponseTest(bot),
 
                 _ => null
             },
